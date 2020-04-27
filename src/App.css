@@ -22,6 +22,13 @@ td {
   color: #157dff;
 }
 
+.filename {
+  display: inline-block;
+  padding: 1em;
+  font-weight: bold;
+  color: #157dff;
+}
+
 .when, .then {
   font-weight: bold;
   min-width: 200px;

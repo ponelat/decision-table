@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useMemo} from 'react';
 import useLocalStorage from './use-localstorage'
 import produce from 'immer'
 import logo from './logo.svg';
@@ -72,17 +72,28 @@ function App() {
     definitions: initDefinitions,
     rowMap: {}
   }
+  const initFilename = `decision-table.csv`
 
   const [data, setData] = useLocalStorage('data', initData)
+  const [filename, setFilename] = useLocalStorage('filename', initFilename)
   const {definitions, rowMap}: Data = data
 
   // Generated rows
   const manyRows = useMemo(() => manyRowsFromColDefs(definitions), [definitions])
   const rowCount = manyRows.length
 
-  const resetData = () => {
+  const resetAll = () => {
     setData(produce(() => initData))
+    setFilename(initFilename)
   }
+
+  const resetRows = () => {
+    setData(produce((data: Data) => {
+      data.rowMap = {}
+      return data
+    }))
+  }
+
 
   const downloadCsv = () => {
     const headers = [...definitions.map(def => `${def.header} (${def.enums.join('/')})`), 'when', 'then']
@@ -94,7 +105,7 @@ function App() {
     const csv = [headers, ...rows]
     const csvStr = csv.map(r => r.map(cell => JSON.stringify(cell)).join(',')).join('\n')
 
-    DownloadStrAsFile(csvStr, 'decision-table.csv', 'text/csv')
+    DownloadStrAsFile(csvStr, filename, 'text/csv')
   }
 
   const getRowDataWhen = (row: string[]) => {
@@ -140,17 +151,21 @@ function App() {
 
   return (
     <div className="App">
-      <h3>Decision Table</h3>
-      <button onClick={resetData}>Reset</button>
-      <button onClick={downloadCsv}>Download CSV</button>
-      <h4>Total: {rowCount} | Done: {rowsDone}</h4>
+      <h1>Decision Table</h1>
+      <h3>
+        <ContentEditable className="filename" html={filename} onChange={(e: TValue) => setFilename(e.target.value)}/>
+        <button onClick={downloadCsv}>Download CSV</button>
+      </h3>
+      <button onClick={resetAll}>Reset All</button>
+      <button onClick={resetRows}>Reset Data</button>
+      <h4>Total: {rowCount} | When/Thens: {rowsDone}</h4>
 
       <table>
         <thead>
           <tr>
             <>
               {data.definitions.map((col: ColDefinition,i: number) => (
-              <th>
+              <th key={col.header}>
                 <ContentEditable className="heading" html={col.header} onChange={setColHeader(i)}/>
                 <ContentEditable className="enums" html={col.enums.join('/')} onChange={setColEnums(i)}/>
                 <button onClick={removeCol(i)}>-</button>
@@ -164,11 +179,11 @@ function App() {
         </thead>
         <tbody>
           {manyRows.map((row, r) => (
-            <tr>
+            <tr key={rowHash(row)}>
               <>
                 {row.map((cell, c) => {
                   return (
-                    <td>{cell}</td>
+                    <td key={c}>{cell}</td>
                   )
                 })}
               </>
