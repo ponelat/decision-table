@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/decision-table/static/css/main.f181cae8.chunk.css",
+    "main.js": "/decision-table/static/js/main.cfdc7d7f.chunk.js",
+    "main.js.map": "/decision-table/static/js/main.cfdc7d7f.chunk.js.map",
+    "runtime-main.js": "/decision-table/static/js/runtime-main.17281230.js",
+    "runtime-main.js.map": "/decision-table/static/js/runtime-main.17281230.js.map",
+    "static/js/2.58ea0fb5.chunk.js": "/decision-table/static/js/2.58ea0fb5.chunk.js",
+    "static/js/2.58ea0fb5.chunk.js.map": "/decision-table/static/js/2.58ea0fb5.chunk.js.map",
+    "index.html": "/decision-table/index.html",
+    "precache-manifest.919ce6c65cc7d9b860f5570dfaac7bd1.js": "/decision-table/precache-manifest.919ce6c65cc7d9b860f5570dfaac7bd1.js",
+    "service-worker.js": "/decision-table/service-worker.js",
+    "static/css/main.f181cae8.chunk.css.map": "/decision-table/static/css/main.f181cae8.chunk.css.map",
+    "static/js/2.58ea0fb5.chunk.js.LICENSE.txt": "/decision-table/static/js/2.58ea0fb5.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.17281230.js",
+    "static/js/2.58ea0fb5.chunk.js",
+    "static/css/main.f181cae8.chunk.css",
+    "static/js/main.cfdc7d7f.chunk.js"
+  ]
+}
