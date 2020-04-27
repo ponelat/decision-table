@@ -165,7 +165,7 @@ function App() {
           <tr>
             <>
               {data.definitions.map((col: ColDefinition,i: number) => (
-              <th key={col.header}>
+              <th key={i}>
                 <ContentEditable className="heading" html={col.header} onChange={setColHeader(i)}/>
                 <ContentEditable className="enums" html={col.enums.join('/')} onChange={setColEnums(i)}/>
                 <button onClick={removeCol(i)}>-</button>
