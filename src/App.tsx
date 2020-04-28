@@ -74,6 +74,7 @@ function App() {
 
   const [data, setData] = useLocalStorage('data', initData)
   const [filename, setFilename] = useLocalStorage('filename', initFilename)
+  const [filters, setFilters] = useLocalStorage('filters', [])
   const {definitions, rowMap}: Data = data
 
 
@@ -91,6 +92,7 @@ function App() {
 
   const resetAll = () => {
     setData(produce(() => initData))
+    setFilters([])
     setFilename(initFilename)
   }
 
@@ -101,6 +103,9 @@ function App() {
     }))
   }
 
+  const resetFilters = () => {
+    setFilters([])
+  }
 
   const downloadCsv = () => {
     const headers = [...definitions.map(def => `${def.header} (${def.enums.join('/')})`), 'when', 'then']
@@ -169,7 +174,26 @@ function App() {
     return data
   }))
 
+
+  const setFilter = (i: number) => (val: TValue) => setFilters(produce((filters: string[]) => {
+    filters[i] = val.target.value.toLowerCase()
+    return filters
+  }))
+
+  const filterRows = (row: string[], i: number): boolean => {
+    return !filters.some((f: string,i: number) => {
+      if(!f)
+        return false
+      return !f.split('|').map(g => g.trim()).some(f => {
+        return row[i].toLowerCase().includes(f)
+      })
+    })
+  }
+
   const rowsDone = useMemo(() => Object.keys(rowMap).length, [rowMap])
+
+  const shownRows = manyRows.filter(filterRows)
+  const numHiddenRows = manyRows.length - shownRows.length
 
   return (
     <div className="App">
@@ -180,7 +204,9 @@ function App() {
       </h3>
       <button onClick={resetAll}>Reset All</button>
       <button onClick={resetRows}>Reset Data</button>
-      <h4>Total: {rowCount} | When/Thens: {rowsDone}</h4>
+      <button onClick={resetFilters}>Reset Filters</button>
+
+      <h4>Total: {rowCount} | When/Thens: {rowsDone} | Hidden {numHiddenRows}</h4>
 
       <table>
         <thead>
@@ -190,6 +216,7 @@ function App() {
               <th key={i}>
                 <ContentEditable className="heading" html={col.header} onChange={setColHeader(i)}/>
                 <ContentEditable className="enums" html={col.enums.join('/')} onChange={setColEnums(i)}/>
+                <ContentEditable placeholder="...filter|filter" className="filter" html={filters[i] || ''} onChange={setFilter(i)}/>
                 <button onClick={removeCol(i)}>-</button>
               </th>
             ))}
@@ -200,7 +227,7 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {manyRows.map((row, r) => (
+          {shownRows.map((row, r) => (
             <tr key={rowHash(row)}>
               <>
                 {row.map((cell, c) => {
