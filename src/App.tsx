@@ -41,8 +41,6 @@ const rowCountFromColDefs = (colDefs: ColDefinition[]): number => {
   return colDefs.reduce((acc, def): number => acc * def.enums.length, 1)
 }
 
-const rowHash = (row: string[]): string => row.join('/')
-
 const explodeRows = (base: string[][], pref: string[]=[]): string[][] => {
   const [head, ...rest] = base
 
@@ -78,6 +76,15 @@ function App() {
   const [filename, setFilename] = useLocalStorage('filename', initFilename)
   const {definitions, rowMap}: Data = data
 
+
+  // [true, false, pet] => "0/1/3", based on col definitions
+  const rowHash = (row: string[]): string => {
+    return row.map((r,i) => {
+      return definitions[i].enums.findIndex(e => e === r)
+    }).join('/')
+  }
+
+
   // Generated rows
   const manyRows = useMemo(() => manyRowsFromColDefs(definitions), [definitions])
   const rowCount = manyRows.length
@@ -108,12 +115,12 @@ function App() {
     DownloadStrAsFile(csvStr, filename, 'text/csv')
   }
 
-  const getRowDataWhen = (row: string[]) => {
-    return (rowMap[rowHash(row)] || {}).when
+  const getRowDataWhen = (row: string[]): string => {
+    return (rowMap[rowHash(row)] || {}).when || ''
   }
 
-  const getRowDataThen = (row: string[]) => {
-    return (rowMap[rowHash(row)] || {}).then
+  const getRowDataThen = (row: string[]): string => {
+    return (rowMap[rowHash(row)] || {}).then || ''
   }
 
   const setRowData = (row: string[], key: string) => (e: TValue) => setData(produce((data: Data) => {
@@ -131,6 +138,14 @@ function App() {
 
   const removeCol = (i: number) => () => setData(produce((data: Data) => {
     data.definitions.splice(i, 1)
+
+    // Move keys
+    for(let key in data.rowMap) {
+      let newKey = key.split('/').splice(i, 1).join('/')
+      data.rowMap[newKey] = data.rowMap[key]
+      delete data.rowMap[key]
+    }
+
     return data
   }))
 
@@ -144,6 +159,13 @@ function App() {
       header: "New Column",
       enums: ['true', 'false']
     })
+
+    // Move keys
+    for(let key in data.rowMap) {
+      data.rowMap[key + '/0'] = data.rowMap[key]
+      delete data.rowMap[key]
+    }
+
     return data
   }))
 
@@ -189,10 +211,10 @@ function App() {
               </>
               <td>&nbsp;</td>
               <td>
-                <ContentEditable className="when" html={getRowDataWhen(row) || ''} onChange={setRowData(row, 'when')}/>
+                <ContentEditable className="when" html={getRowDataWhen(row)} onChange={setRowData(row, 'when')}/>
               </td>
               <td>
-                <ContentEditable className="then" html={getRowDataThen(row) || ''} onChange={setRowData(row, 'then')}/>
+                <ContentEditable className="then" html={getRowDataThen(row)} onChange={setRowData(row, 'then')}/>
               </td>
             </tr>
           ))}
