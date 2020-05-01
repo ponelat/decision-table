@@ -1,10 +1,12 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useEffect} from 'react';
 import useLocalStorage from './use-localstorage'
 import produce from 'immer'
 import logo from './logo.svg';
 import './App.css';
 import ContentEditable from 'react-contenteditable'
 import DownloadStrAsFile from './download-file'
+import './mousetrap.d'
+import Mousetrap from 'mousetrap'
 
 interface ColDefinition {
   header: string;
@@ -65,6 +67,7 @@ const manyRowsFromColDefs = (colDefs: ColDefinition[]): string[][] => {
 //   return [[]]
 // }
 
+
 function App() {
   const initData: Data = {
     definitions: initDefinitions,
@@ -72,11 +75,15 @@ function App() {
   }
   const initFilename = `decision-table.csv`
 
-  const [data, setData] = useLocalStorage('data', initData)
+  const [data, setDataFn] = useLocalStorage('data', initData)
   const [filename, setFilename] = useLocalStorage('filename', initFilename)
   const [filters, setFilters] = useLocalStorage('filters', [])
   const {definitions, rowMap}: Data = data
 
+  const setData = (data: Data | Function) => {
+    const ret = setDataFn(data)
+    return ret
+  }
 
   // [true, false, pet] => "0/1/3", based on col definitions
   const rowHash = (row: string[]): string => {
@@ -84,7 +91,6 @@ function App() {
       return definitions[i].enums.findIndex(e => e === r)
     }).join('/')
   }
-
 
   // Generated rows
   const manyRows = useMemo(() => manyRowsFromColDefs(definitions), [definitions])
@@ -105,6 +111,13 @@ function App() {
 
   const resetFilters = () => {
     setFilters([])
+  }
+
+  const clearFilter = (i: number) => () => {
+    setFilters(produce(filters => {
+      delete filters[i]
+      return filters
+    }))
   }
 
   const downloadCsv = () => {
@@ -174,9 +187,13 @@ function App() {
     return data
   }))
 
-
   const setFilter = (i: number) => (val: TValue) => setFilters(produce((filters: string[]) => {
     filters[i] = val.target.value.toLowerCase()
+    return filters
+  }))
+
+  const setFilterByCell = (i: number, s: string) => () => setFilters(produce((filters: string[]) => {
+    filters[i] = s
     return filters
   }))
 
@@ -216,7 +233,12 @@ function App() {
               <th key={i}>
                 <ContentEditable className="heading" html={col.header} onChange={setColHeader(i)}/>
                 <ContentEditable className="enums" html={col.enums.join('/')} onChange={setColEnums(i)}/>
-                <ContentEditable placeholder="...filter|filter" className="filter" html={filters[i] || ''} onChange={setFilter(i)}/>
+                <div className="filter">
+                  <ContentEditable placeholder="...filter|filter" html={filters[i] || ''} onChange={setFilter(i)}/>
+                  { filters[i] ? (
+                    <span className="clear-filter" onClick={clearFilter(i)}>x</span>
+                  ) : null }
+                </div>
                 <button onClick={removeCol(i)}>-</button>
               </th>
             ))}
@@ -232,7 +254,10 @@ function App() {
               <>
                 {row.map((cell, c) => {
                   return (
-                    <td key={c}>{cell}</td>
+                    <td className="cell" key={c}>
+                      {cell}
+                      <span onClick={setFilterByCell(c, cell)}>o</span>
+                    </td>
                   )
                 })}
               </>

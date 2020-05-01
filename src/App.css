@@ -48,6 +48,31 @@ td {
 .filter {
   color: #ff1515;
 }
+.filter > * {
+  display: inline-block;
+}
+
+.clear-filter {
+  display: inline-block;
+  margin: auto 5px;
+  cursor: pointer;
+  color: #333;
+  width: 20px;
+  border-radius: 50%;
+  background: #eee;
+  font-family: monospace;
+}
+
+.cell > span {
+  /* visibility: hidden; */
+  display: inline-block;
+  margin-left: 5px;
+  color: #333;
+  cursor: pointer;
+}
+.cell:hover > span {
+  visibility: visible;
+}
 
 [contenteditable][placeholder]:empty:before {
   content: attr(placeholder);
