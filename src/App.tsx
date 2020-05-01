@@ -1,4 +1,4 @@
-import React, {useMemo, useEffect} from 'react';
+import React, {useMemo, useEffect, useState} from 'react';
 import useLocalStorage from './use-localstorage'
 import produce from 'immer'
 import logo from './logo.svg';
@@ -79,6 +79,7 @@ function App() {
   const [filename, setFilename] = useLocalStorage('filename', initFilename)
   const [filters, setFilters] = useLocalStorage('filters', [])
   const {definitions, rowMap}: Data = data
+  const [hideDataRows, setHideDataRows] = useState(false)
 
   const setData = (data: Data | Function) => {
     const ret = setDataFn(data)
@@ -199,13 +200,20 @@ function App() {
   }))
 
   const filterRows = (row: string[], i: number): boolean => {
-    return !filters.some((f: string,i: number) => {
+    let showThisRow = !filters.some((f: string,i: number) => {
       if(!f)
         return false
       return !f.split('|').map(g => g.trim()).some(f => {
         return row[i].toLowerCase().includes(f)
       })
     })
+
+    if(hideDataRows) {
+      let rowData = (rowMap[rowHash(row)])
+      showThisRow = showThisRow && !(!!rowData?.when || !!rowData?.then)
+    }
+
+    return showThisRow
   }
 
   const rowsDone = useMemo(() => Object.keys(rowMap).length, [rowMap])
@@ -225,6 +233,11 @@ function App() {
       <button onClick={resetFilters}>Reset Filters</button>
 
       <h4>Total: {rowCount} | When/Thens: {rowsDone} | Hidden {numHiddenRows}</h4>
+
+      <label htmlFor="hide-data-rows">
+        Hide data rows
+      </label>
+      <input onChange={(e) => setHideDataRows(!!e.target.checked)} name="" checked={hideDataRows} type="checkbox" value=""/>
 
       <table>
         <thead>
