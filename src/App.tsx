@@ -159,8 +159,9 @@ function App() {
 
     // Move keys
     for(let key in data.rowMap) {
-      let newKey = key.split('/').splice(i, 1).join('/')
-      data.rowMap[newKey] = data.rowMap[key]
+      let newKey = [...key.split('/')]
+      newKey.splice(i, 1)
+      data.rowMap[newKey.join('/')] = data.rowMap[key]
       delete data.rowMap[key]
     }
 
