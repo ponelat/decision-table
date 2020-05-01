@@ -34,9 +34,8 @@ interface TValue {
 }
 
 const initDefinitions: ColDefinition[] = [
-  {header: 'With Parent Node', enums: ['null', 'object', 'array']},
-  {header: 'From Node', enums: ['null', 'string', 'number', 'bool']},
-  {header: 'To Node', enums: ['null', 'object', 'array', 'string', 'number', 'bool']}
+  {header: 'Day', enums: ['weekday', 'weekend']},
+  {header: 'Weather', enums: ['dull', 'sunny', 'rainy']},
 ]
 
 const rowCountFromColDefs = (colDefs: ColDefinition[]): number => {
@@ -79,7 +78,7 @@ function App() {
   const [filename, setFilename] = useLocalStorage('filename', initFilename)
   const [filters, setFilters] = useLocalStorage('filters', [])
   const {definitions, rowMap}: Data = data
-  const [hideDataRows, setHideDataRows] = useState(false)
+  const [hiddenRows, setHiddenRows] = useState(new Set())
 
   const setData = (data: Data | Function) => {
     const ret = setDataFn(data)
@@ -99,8 +98,9 @@ function App() {
 
   const resetAll = () => {
     setData(produce(() => initData))
-    setFilters([])
     setFilename(initFilename)
+    resetFilters()
+    setHiddenRows(new Set())
   }
 
   const resetRows = () => {
@@ -112,6 +112,11 @@ function App() {
 
   const resetFilters = () => {
     setFilters([])
+    setHiddenRows(new Set())
+  }
+
+  const resetHiddenDataRows = () => {
+    setHiddenRows(new Set())
   }
 
   const clearFilter = (i: number) => () => {
@@ -208,12 +213,15 @@ function App() {
       })
     })
 
-    if(hideDataRows) {
-      let rowData = (rowMap[rowHash(row)])
-      showThisRow = showThisRow && !(!!rowData?.when || !!rowData?.then)
-    }
+    showThisRow = showThisRow && !hiddenRows.has(rowHash(row))
 
     return showThisRow
+  }
+
+  const hideExistingDataRows = () => {
+    setHiddenRows(new Set(Object.keys(rowMap).filter(k => {
+      return rowMap[k].when || rowMap[k].then
+    })))
   }
 
   const rowsDone = useMemo(() => Object.keys(rowMap).length, [rowMap])
@@ -235,9 +243,10 @@ function App() {
       <h4>Total: {rowCount} | When/Thens: {rowsDone} | Hidden {numHiddenRows}</h4>
 
       <label htmlFor="hide-data-rows">
-        Hide data rows
+        Data rows: &nbsp;
       </label>
-      <input onChange={(e) => setHideDataRows(!!e.target.checked)} name="" checked={hideDataRows} type="checkbox" value=""/>
+      <button onClick={hideExistingDataRows}> Hide existing data rows </button>
+      <button onClick={resetHiddenDataRows}> Unhide all data rows</button>
 
       <table>
         <thead>
